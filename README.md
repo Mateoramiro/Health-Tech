@@ -1,4 +1,4 @@
-# ConsultaCerta
+# Healthtech
 
 Sistema de agendamento para uma clínica de bairro: a recepção marca e cancela consultas dos pacientes com cada profissional de saúde, e o sistema impede conflito de horário, vaga duplicada e consulta fora do expediente.
 
@@ -28,7 +28,7 @@ Projeto Final da disciplina de Backend (Engenharia de Software, SATC). **Etapa 1
 
 **Tema sorteado:** Saúde e Bem-Estar
 
-Numa clínica pequena de bairro, a agenda dos profissionais fica num caderno e em conversas de WhatsApp. A recepcionista confere a página à mão, e é assim que acontece de dois pacientes serem marcados no mesmo horário com o mesmo médico, de uma consulta ser marcada no sábado, quando ninguém atende, e de uma mesma pessoa pegar duas vagas de cardiologia enquanto outros pacientes esperam semanas por uma. Quando alguém desmarca em cima da hora, a vaga se perde, porque ninguém consegue ocupá-la a tempo. O ConsultaCerta guarda profissionais, pacientes e consultas, e só deixa a consulta ser marcada ou cancelada se o pedido respeitar as regras da clínica.
+Numa clínica pequena de bairro, a agenda dos profissionais fica num caderno e em conversas de WhatsApp. A recepcionista confere a página à mão, e é assim que acontece de dois pacientes serem marcados no mesmo horário com o mesmo médico, de uma consulta ser marcada no sábado, quando ninguém atende, e de uma mesma pessoa pegar duas vagas de cardiologia enquanto outros pacientes esperam semanas por uma. Quando alguém desmarca em cima da hora, a vaga se perde, porque ninguém consegue ocupá-la a tempo. O Healthtech guarda profissionais, pacientes e consultas, e só deixa a consulta ser marcada ou cancelada se o pedido respeitar as regras da clínica.
 
 **Quem usa o sistema:**
 
@@ -170,8 +170,8 @@ O contrato completo, com todas as rotas e os DTOs, está em [docs/contrato-da-ap
 Pré-requisitos: JDK 25, Docker Desktop aberto e Git.
 
 ```bash
-git clone https://github.com/mateoramiro/consulta-certa.git
-cd consulta-certa
+git clone https://github.com/mateoramiro/healthtech.git
+cd healthtech
 
 docker compose up -d          # sobe o PostgreSQL na porta 5437
 ./mvnw spring-boot:run        # Windows: .\mvnw.cmd spring-boot:run
