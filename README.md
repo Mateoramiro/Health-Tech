@@ -171,8 +171,8 @@ O contrato completo, com todas as rotas e os DTOs, está em [docs/contrato-da-ap
 Pré-requisitos: JDK 25, Docker Desktop aberto e Git.
 
 ```bash
-git clone https://github.com/mateoramiro/consulta-certa.git
-cd consulta-certa
+   git clone https://github.com/mateoramiro/healthtech.git
+   cd healthtech
 
 docker compose up -d          # sobe o PostgreSQL na porta 5437
 ./mvnw spring-boot:run        # Windows: .\mvnw.cmd spring-boot:run
