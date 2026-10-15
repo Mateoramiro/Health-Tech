@@ -29,7 +29,7 @@ Projeto Final da disciplina de Backend (Engenharia de Software, SATC). **Etapa 1
 
 **Tema sorteado:** Saúde e Bem-Estar
 
-Numa clínica pequena de bairro, a agenda dos profissionais fica num caderno e em conversas de WhatsApp. A recepcionista confere a página à mão, e é assim que acontece de dois pacientes serem marcados no mesmo horário com o mesmo médico, de uma consulta ser marcada no sábado, quando ninguém atende, e de uma mesma pessoa pegar duas vagas de cardiologia enquanto outros pacientes esperam semanas por uma. Quando alguém desmarca em cima da hora, a vaga se perde, porque ninguém consegue ocupá-la a tempo. O ConsultaCerta guarda profissionais, pacientes e consultas, e só deixa a consulta ser marcada ou cancelada se o pedido respeitar as regras da clínica.
+Numa clínica pequena de bairro, a agenda dos profissionais fica num caderno e em conversas de WhatsApp. A recepcionista confere a página à mão, e é assim que acontece de dois pacientes serem marcados no mesmo horário com o mesmo médico, de uma consulta ser marcada no sábado, quando ninguém atende, e de uma mesma pessoa pegar duas vagas de cardiologia enquanto outros pacientes esperam semanas por uma. Quando alguém desmarca em cima da hora, a vaga se perde, porque ninguém consegue ocupá-la a tempo. O Health Tech guarda profissionais, pacientes e consultas, e só deixa a consulta ser marcada ou cancelada se o pedido respeitar as regras da clínica.
 
 **Quem usa o sistema:**
 
@@ -171,8 +171,8 @@ O contrato completo, com todas as rotas e os DTOs, está em [docs/contrato-da-ap
 Pré-requisitos: JDK 25, Docker Desktop aberto e Git.
 
 ```bash
-   git clone https://github.com/mateoramiro/healthtech.git
-   cd healthtech
+git clone https://github.com/mateoramiro/healthtech.git
+cd healthtech
 
 docker compose up -d          # sobe o PostgreSQL na porta 5437
 ./mvnw spring-boot:run        # Windows: .\mvnw.cmd spring-boot:run
@@ -207,18 +207,21 @@ Use esta opção se o Docker não roda na sua máquina (por exemplo, um Windows 
 
    ```sql
    CREATE USER consultacerta WITH PASSWORD 'consultacerta';
+   DROP DATABASE consultacerta WITH (FORCE);
    CREATE DATABASE consultacerta OWNER consultacerta;
+   ALTER DATABASE consultacerta RENAME TO healthtech;
+   SELECT datname FROM pg_database;
    ```
 
    Não crie tabelas: o Flyway cria as três tabelas quando a API sobe.
 2. Em `src/main/resources/application.properties`, troque a porta na primeira linha de `5437` para `5432`:
 
    ```
-   spring.datasource.url=jdbc:postgresql://localhost:5432/consultacerta
+   spring.datasource.url=jdbc:postgresql://localhost:5432/healthtech
    ```
 3. Suba a API, dentro da pasta do projeto: `./mvnw spring-boot:run` (Windows: `.\mvnw.cmd spring-boot:run`).
 
-Se aparecer `Migration checksum mismatch`, o banco já tinha migrations de outra cópia do projeto. Apague o banco e crie de novo (`DROP DATABASE consultacerta WITH (FORCE);`, conectado como `postgres`, e o `CREATE DATABASE` acima). Se aparecer `Connection refused` na porta `5437`, a troca do passo 2 não foi feita.
+Se aparecer `Migration checksum mismatch`, o banco já tinha migrations de outra cópia do projeto. Apague o banco e crie de novo (`DROP DATABASE healthtech WITH (FORCE);`, conectado como `postgres`, e depois `CREATE DATABASE healthtech OWNER consultacerta;`). Se aparecer `Connection refused` na porta `5437`, a troca do passo 2 não foi feita.
 
 Antes de entregar ou de subir pelo Docker, volte a porta para `5437`.
 
