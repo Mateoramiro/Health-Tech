@@ -250,8 +250,9 @@ Troque `.title("ConsultaCerta")` por `.title("Healthtech")`, salve e feche.
 **6. Suba a API:**
 
 ```powershell
-.\mvnw.cmd spring-boot:run
+.\mvnw.cmd spring-boot:run  
 ```
+http://localhost:8080/swagger-ui/index.html
 
 > **Antes de entregar, volte a porta para `5437`** no `application.properties`. É a porta do Docker: quem for usar o `docker compose up -d` precisa dela, e com a `5432` a API não conecta no banco do Docker.
 
