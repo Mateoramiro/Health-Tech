@@ -1,5 +1,4 @@
-# Health Tech
-
+# ConsultaCerta
 
 Sistema de agendamento para uma clínica de bairro: a recepção marca e cancela consultas dos pacientes com cada profissional de saúde, e o sistema impede conflito de horário, vaga duplicada e consulta fora do expediente.
 
@@ -29,7 +28,7 @@ Projeto Final da disciplina de Backend (Engenharia de Software, SATC). **Etapa 1
 
 **Tema sorteado:** Saúde e Bem-Estar
 
-Numa clínica pequena de bairro, a agenda dos profissionais fica num caderno e em conversas de WhatsApp. A recepcionista confere a página à mão, e é assim que acontece de dois pacientes serem marcados no mesmo horário com o mesmo médico, de uma consulta ser marcada no sábado, quando ninguém atende, e de uma mesma pessoa pegar duas vagas de cardiologia enquanto outros pacientes esperam semanas por uma. Quando alguém desmarca em cima da hora, a vaga se perde, porque ninguém consegue ocupá-la a tempo. O Health Tech guarda profissionais, pacientes e consultas, e só deixa a consulta ser marcada ou cancelada se o pedido respeitar as regras da clínica.
+Numa clínica pequena de bairro, a agenda dos profissionais fica num caderno e em conversas de WhatsApp. A recepcionista confere a página à mão, e é assim que acontece de dois pacientes serem marcados no mesmo horário com o mesmo médico, de uma consulta ser marcada no sábado, quando ninguém atende, e de uma mesma pessoa pegar duas vagas de cardiologia enquanto outros pacientes esperam semanas por uma. Quando alguém desmarca em cima da hora, a vaga se perde, porque ninguém consegue ocupá-la a tempo. O ConsultaCerta guarda profissionais, pacientes e consultas, e só deixa a consulta ser marcada ou cancelada se o pedido respeitar as regras da clínica.
 
 **Quem usa o sistema:**
 
@@ -171,8 +170,8 @@ O contrato completo, com todas as rotas e os DTOs, está em [docs/contrato-da-ap
 Pré-requisitos: JDK 25, Docker Desktop aberto e Git.
 
 ```bash
-git clone https://github.com/mateoramiro/healthtech.git
-cd healthtech
+git clone https://github.com/mateoramiro/consulta-certa.git
+cd consulta-certa
 
 docker compose up -d          # sobe o PostgreSQL na porta 5437
 ./mvnw spring-boot:run        # Windows: .\mvnw.cmd spring-boot:run
@@ -199,31 +198,62 @@ Para ver as regras funcionando, siga esta ordem (use uma data futura, de segunda
 
 Para parar: `Ctrl+C` na API e `docker compose stop` no banco. Para apagar o banco e rodar as migrations do zero: `docker compose down -v` e suba de novo.
 
-### Sem Docker (PostgreSQL instalado no computador)
+### Executar pelo PostgreSQL (sem Docker)
 
-Use esta opção se o Docker não roda na sua máquina (por exemplo, um Windows sem suporte a virtualização). Pré-requisitos: JDK 25, Git e o PostgreSQL instalado, com um cliente como o DBeaver ou o pgAdmin.
+Use esta opção se o Docker não roda na sua máquina. Pré-requisitos: JDK 25, Git, o PostgreSQL instalado (porta `5432`) e um cliente como o DBeaver.
 
-1. Com o PostgreSQL rodando na porta `5432`, abra um editor SQL conectado como `postgres` e rode, como **script**, o que o `docker-compose.yml` faria:
+**1. Pare a API antiga** (`Ctrl + C`), se ainda estiver rodando.
 
-   ```sql
-   CREATE USER consultacerta WITH PASSWORD 'consultacerta';
-   DROP DATABASE consultacerta WITH (FORCE);
-   CREATE DATABASE consultacerta OWNER consultacerta;
-   ALTER DATABASE consultacerta RENAME TO healthtech;
-   SELECT datname FROM pg_database;
-   ```
+**2. Crie o banco no DBeaver.** Conecte como `postgres` (banco `postgres`), abra um editor SQL e rode como script (`Alt + X`):
 
-   Não crie tabelas: o Flyway cria as três tabelas quando a API sobe.
-2. Em `src/main/resources/application.properties`, troque a porta na primeira linha de `5437` para `5432`:
+```sql
+CREATE USER consultacerta WITH PASSWORD 'consultacerta';
+CREATE DATABASE healthtech OWNER consultacerta;
+```
 
-   ```
-   spring.datasource.url=jdbc:postgresql://localhost:5432/healthtech
-   ```
-3. Suba a API, dentro da pasta do projeto: `./mvnw spring-boot:run` (Windows: `.\mvnw.cmd spring-boot:run`).
+Se o primeiro comando disser `role "consultacerta" already exists`, ignore e rode só o segundo. Se disser `database "healthtech" already exists`, apague e crie de novo:
 
-Se aparecer `Migration checksum mismatch`, o banco já tinha migrations de outra cópia do projeto. Apague o banco e crie de novo (`DROP DATABASE healthtech WITH (FORCE);`, conectado como `postgres`, e depois `CREATE DATABASE healthtech OWNER consultacerta;`). Se aparecer `Connection refused` na porta `5437`, a troca do passo 2 não foi feita.
+```sql
+DROP DATABASE healthtech WITH (FORCE);
+CREATE DATABASE healthtech OWNER consultacerta;
+```
 
-Antes de entregar ou de subir pelo Docker, volte a porta para `5437`.
+**3. Entre na pasta do projeto.** Use o caminho de onde o projeto está no seu computador (troque `SeuUsuario`):
+
+```powershell
+cd C:\Users\SeuUsuario\Desktop\Healthtech
+dir
+```
+
+O `dir` tem que mostrar `pom.xml` e `mvnw.cmd`. Se mostrar só outra pasta, entre nela com `cd` e rode o `dir` de novo.
+
+**4. Aponte o projeto para o banco.** Abra o arquivo:
+
+```powershell
+notepad src\main\resources\application.properties
+```
+
+No Bloco de Notas, deixe a linha assim e salve com `Ctrl + S`:
+
+```
+spring.datasource.url=jdbc:postgresql://localhost:5432/healthtech
+```
+
+**5. Troque o título do Swagger.** Abra o arquivo:
+
+```powershell
+notepad src\main\java\api\config\OpenApiConfig.java
+```
+
+Troque `.title("ConsultaCerta")` por `.title("Healthtech")`, salve e feche.
+
+**6. Suba a API:**
+
+```powershell
+.\mvnw.cmd spring-boot:run
+```
+
+> **Antes de entregar, volte a porta para `5437`** no `application.properties`. É a porta do Docker: quem for usar o `docker compose up -d` precisa dela, e com a `5432` a API não conecta no banco do Docker.
 
 ## Situação do projeto
 
