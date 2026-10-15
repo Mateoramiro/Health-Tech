@@ -1,4 +1,4 @@
-# Healthtech 
+# ConsultaCerta
 
 Sistema de agendamento para uma clínica de bairro: a recepção marca e cancela consultas dos pacientes com cada profissional de saúde, e o sistema impede conflito de horário, vaga duplicada e consulta fora do expediente.
 
