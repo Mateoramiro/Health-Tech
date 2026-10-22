@@ -1,305 +1,191 @@
-ConsultaCerta — Contrato da API
+# Contrato da API
 
-Este documento descreve as rotas da API ConsultaCerta, incluindo os dados recebidos, as respostas, as validações e os possíveis erros.
+## Convenções
 
-As regras de negócio R1 a R4 estão detalhadas na seção Regras de negócio.
+| Item | Valor |
+|---|---|
+| Endereço base | `http://localhost:8080` |
+| Formato | JSON, na requisição e na resposta |
+| Datas | `yyyy-MM-ddTHH:mm:ss` (dia e hora, sem fuso) |
+| Erros | Sempre no formato `ErroDTO` (ver [Erros](#erros)) |
+| Documentação viva | `http://localhost:8080/swagger-ui.html` |
 
-Índice
-1. Informações gerais
-2. Formato de erro
-3. Profissionais
-4. Pacientes
-5. Consultas
-6. Regras de negócio
-7. Resumo dos status HTTP
-8. Resumo de todas as rotas
-1. Informações gerais
-Item	Descrição
-Endereço base	http://localhost:8080
-Formato	JSON (Content-Type: application/json)
-Data e hora	yyyy-MM-dd'T'HH:mm:ss, sem fuso horário
-IDs	Números inteiros gerados pela API
-Autenticação	Não implementada nesta etapa
-Swagger UI	http://localhost:8080/swagger-ui.html
-Documentação OpenAPI	http://localhost:8080/v3/api-docs
-Convenções
-Os IDs são gerados automaticamente pela API e não devem ser enviados no corpo das requisições de criação.
-Nomes, especialidades, registros profissionais e e-mails são armazenados sem espaços no início ou no final.
-Listas vazias retornam 200 OK com [], nunca 404 Not Found.
-Os corpos das requisições e respostas utilizam JSON, salvo quando indicado que não há corpo.
+## Rotas
 
-Exemplo de data e hora:
+Coluna **Funciona**: `sim` para as rotas que já respondem nesta etapa. Todas as rotas abaixo estão implementadas.
 
-2026-10-20T09:30:00
+### Profissionais
 
-2. Formato de erro
+| Verbo | Caminho | O que faz | Entrada | Saída | Sucesso | Erros | Funciona |
+|---|---|---|---|---|---|---|---|
+| `POST` | `/profissionais` | Cadastra um profissional. Recusa registro profissional repetido | `ProfissionalRequestDTO` | `ProfissionalResponseDTO` | `201` | `400` | sim |
+| `GET` | `/profissionais` | Lista os profissionais | Nenhuma | lista de `ProfissionalResponseDTO` | `200` | Nenhum | sim |
+| `GET` | `/profissionais/{id}` | Busca um profissional | Nenhuma | `ProfissionalResponseDTO` | `200` | `404` | sim |
+| `PUT` | `/profissionais/{id}` | Atualiza um profissional. O registro não pode ser o de outro profissional | `ProfissionalRequestDTO` | `ProfissionalResponseDTO` | `200` | `400`, `404` | sim |
+| `DELETE` | `/profissionais/{id}` | Remove um profissional. Não remove quem já tem consultas | Nenhuma | Nenhuma | `204` | `400`, `404` | sim |
 
-Todos os erros da API seguem o mesmo formato JSON:
+### Pacientes
 
-{
-  "status": 400,
-  "erro": "Bad Request",
-  "mensagem": "R1: o profissional Dra. Helena Martins já tem uma consulta agendada nesse horário",
-  "caminho": "/consultas",
-  "timestamp": "2026-10-15T19:30:00",
-  "campos": []
-}
+| Verbo | Caminho | O que faz | Entrada | Saída | Sucesso | Erros | Funciona |
+|---|---|---|---|---|---|---|---|
+| `POST` | `/pacientes` | Cadastra um paciente. Sem paciente não há consulta | `PacienteRequestDTO` | `PacienteResponseDTO` | `201` | `400` | sim |
+| `GET` | `/pacientes` | Lista os pacientes | Nenhuma | lista de `PacienteResponseDTO` | `200` | Nenhum | sim |
+| `GET` | `/pacientes/{id}` | Busca um paciente | Nenhuma | `PacienteResponseDTO` | `200` | `404` | sim |
+| `PUT` | `/pacientes/{id}` | Atualiza um paciente | `PacienteRequestDTO` | `PacienteResponseDTO` | `200` | `400`, `404` | sim |
 
-Campos do erro
-Campo	Tipo	Descrição
-status	Número	Código HTTP do erro
-erro	Texto	Nome do status HTTP
-mensagem	Texto	Descrição do erro em português
-caminho	Texto	Caminho da requisição que falhou
-timestamp	Data e hora	Momento em que o erro ocorreu
-campos	Lista	Campos inválidos, quando houver erro de validação
+### Consultas
 
-Cada item da lista campos possui o seguinte formato:
+As rotas de marcar e cancelar nascem das regras de negócio do README e já funcionam.
 
-{
-  "campo": "nome",
-  "mensagem": "Nome é obrigatório"
-}
+| Verbo | Caminho | O que faz | Regra | Entrada | Saída | Sucesso | Erros | Funciona |
+|---|---|---|---|---|---|---|---|---|
+| `POST` | `/consultas` | Marca uma consulta | R1, R2 e R3 | `ConsultaRequestDTO` | `ConsultaResponseDTO` | `201` | `400`, `404` | sim |
+| `GET` | `/consultas` | Lista as consultas, da mais próxima para a mais distante | Nenhuma | Nenhuma | lista de `ConsultaResponseDTO` | `200` | Nenhum | sim |
+| `GET` | `/consultas/{id}` | Busca uma consulta | Nenhuma | Nenhuma | `ConsultaResponseDTO` | `200` | `404` | sim |
+| `PUT` | `/consultas/{id}/cancelar` | Cancela a consulta e libera o horário | R4 | Nenhuma | `ConsultaResponseDTO` | `200` | `400`, `404` | sim |
+| `PUT` | `/consultas/{id}/concluir` | Registra que o paciente foi atendido (`REALIZADA`). Só consulta agendada | Nenhuma | Nenhuma | `ConsultaResponseDTO` | `200` | `400`, `404` | sim |
 
-Tipos de erro
-Tipo	HTTP	Quando ocorre
-Corpo ilegível	400 Bad Request	JSON inválido ou data e hora fora do formato esperado
-Campo inválido	400 Bad Request	Campo obrigatório ausente ou fora das regras de validação
-Regra de negócio	400 Bad Request	Operação válida sintaticamente, mas que viola uma regra de negócio
-Não encontrado	404 Not Found	ID informado não existe
+## DTOs
 
-Mensagens padronizadas:
+| DTO | Direção | Campos | Validações |
+|---|---|---|---|
+| `ProfissionalRequestDTO` | entrada | `nome`, `especialidade`, `registroProfissional` | os três obrigatórios; `nome` até 255, `especialidade` até 100 e `registroProfissional` até 30 caracteres |
+| `ProfissionalResponseDTO` | saída | `id`, `nome`, `especialidade`, `registroProfissional` | Nenhuma |
+| `PacienteRequestDTO` | entrada | `nome`, `email`, `telefone` | os três obrigatórios; `nome` e `email` até 255 caracteres; `email` em formato válido; `telefone` com 10 ou 11 números |
+| `PacienteResponseDTO` | saída | `id`, `nome`, `email`, `telefone` | Nenhuma |
+| `ConsultaRequestDTO` | entrada | `pacienteId`, `profissionalId`, `dataHora` | os três obrigatórios; `dataHora` no futuro |
+| `ConsultaResponseDTO` | saída | `id`, `paciente`, `profissional`, `dataHora`, `status` | Nenhuma. `status` é `AGENDADA`, `CANCELADA` ou `REALIZADA`, e muda pelas regras R4 e pela conclusão |
 
-Corpo ilegível: Corpo da requisição inválido: confira o JSON e o formato da data e hora (yyyy-MM-ddTHH:mm:ss)
-Campo inválido: Dados inválidos: confira a lista de campos
-Não encontrado: <Entidade> não encontrado: <id>
+## Exemplos
 
-Nos erros de validação, a lista campos contém um item por campo inválido, ordenados pelo nome do campo. Nos demais erros, a lista fica vazia.
+### `POST /profissionais`
 
-Ordem das verificações
-Validação do formato do JSON.
-Validação dos campos.
-Verificação da existência dos IDs.
-Aplicação das regras de negócio.
-3. Profissionais
+Requisição:
 
-Representam os profissionais responsáveis pelos atendimentos da clínica.
-
-3.1. Objeto Profissional
-Campo	Tipo	Exemplo
-id	Número inteiro	1
-nome	Texto	Dra. Helena Martins
-especialidade	Texto	Cardiologia
-registroProfissional	Texto	CRM-SC 48213
-3.2. Validação dos campos
-Campo	Obrigatório	Regras
-nome	Sim	Não pode ser vazio; máximo de 255 caracteres
-especialidade	Sim	Não pode ser vazia; máximo de 100 caracteres
-registroProfissional	Sim	Não pode ser vazio; máximo de 30 caracteres; não pode pertencer a outro profissional
-
-Mensagens de validação:
-
-Nome é obrigatório
-Nome tem no máximo 255 caracteres
-Especialidade é obrigatória
-Especialidade tem no máximo 100 caracteres
-Registro profissional é obrigatório
-Registro profissional tem no máximo 30 caracteres
-3.3. Cadastrar profissional
-
-POST /profissionais
-
-Cadastra um novo profissional. O registro profissional não pode estar associado a outro profissional.
-
-Corpo da requisição:
-
+```json
 {
   "nome": "Dra. Helena Martins",
   "especialidade": "Cardiologia",
   "registroProfissional": "CRM-SC 48213"
 }
+```
 
+Resposta, `201 Created`:
 
-Resposta de sucesso: 201 Created
-
+```json
 {
   "id": 1,
   "nome": "Dra. Helena Martins",
   "especialidade": "Cardiologia",
   "registroProfissional": "CRM-SC 48213"
 }
+```
 
+### `POST /pacientes`
 
-Possíveis erros:
+Requisição:
 
-HTTP	Situação	Mensagem
-400	Campo inválido	Dados inválidos: confira a lista de campos
-400	Registro já cadastrado	Já existe um profissional cadastrado com o registro CRM-SC 48213
-3.4. Listar profissionais
+```json
+{
+  "nome": "Marcos Oliveira",
+  "email": "marcos.oliveira@email.com",
+  "telefone": "48991234567"
+}
+```
 
-GET /profissionais
+Resposta, `201 Created`:
 
-Retorna todos os profissionais cadastrados.
+```json
+{
+  "id": 1,
+  "nome": "Marcos Oliveira",
+  "email": "marcos.oliveira@email.com",
+  "telefone": "48991234567"
+}
+```
 
-Resposta: 200 OK
+### `POST /consultas`
 
-[
-  {
-    "id": 1,
-    "nome": "Dra. Helena Martins",
-    "especialidade": "Cardiologia",
-    "registroProfissional": "CRM-SC 48213"
-  }
-]
+Entram só os ids; paciente e profissional voltam completos, e o status nasce `AGENDADA`.
 
+Requisição:
 
-Se não houver profissionais cadastrados, retorna 200 OK com [].
+```json
+{
+  "pacienteId": 1,
+  "profissionalId": 1,
+  "dataHora": "2026-10-20T09:30:00"
+}
+```
 
-3.5. Buscar profissional por ID
+Resposta, `201 Created`:
 
-GET /profissionais/{id}
+```json
+{
+  "id": 1,
+  "paciente": { "id": 1, "nome": "Marcos Oliveira", "email": "marcos.oliveira@email.com", "telefone": "48991234567" },
+  "profissional": { "id": 1, "nome": "Dra. Helena Martins", "especialidade": "Cardiologia", "registroProfissional": "CRM-SC 48213" },
+  "dataHora": "2026-10-20T09:30:00",
+  "status": "AGENDADA"
+}
+```
 
-Exemplo: GET /profissionais/1
+### `PUT /consultas/{id}/cancelar`
 
-HTTP	Situação
-200 OK	Profissional encontrado
-404 Not Found	Profissional não encontrado
+Sem corpo de entrada. Resposta, `200 OK`, com o mesmo formato de saída e o status trocado:
 
-Exemplo de erro:
+```json
+{
+  "id": 1,
+  "paciente": { "id": 1, "nome": "Marcos Oliveira", "email": "marcos.oliveira@email.com", "telefone": "48991234567" },
+  "profissional": { "id": 1, "nome": "Dra. Helena Martins", "especialidade": "Cardiologia", "registroProfissional": "CRM-SC 48213" },
+  "dataHora": "2026-10-20T09:30:00",
+  "status": "CANCELADA"
+}
+```
 
+## Erros
+
+Todo erro sai no mesmo formato. Este é o `404` de `GET /profissionais/999`:
+
+```json
 {
   "status": 404,
   "erro": "Not Found",
   "mensagem": "Profissional não encontrado: 999",
   "caminho": "/profissionais/999",
-  "timestamp": "2026-10-15T19:30:00",
+  "timestamp": "2026-10-13T19:30:00",
   "campos": []
 }
+```
 
-3.6. Atualizar profissional
+No `400` de validação, a lista `campos` traz um item por campo inválido: `{"campo": "nome", "mensagem": "Nome é obrigatório"}`.
 
-PUT /profissionais/{id}
+Quando uma regra de negócio barra o pedido, o `400` vem com a regra na `mensagem` e `campos` vazio. Este é o de `POST /consultas` num horário que o profissional já ocupou:
 
-Substitui o nome, a especialidade e o registro profissional. O ID não muda.
-
-Corpo da requisição:
-
+```json
 {
-  "nome": "Dra. Helena Martins",
-  "especialidade": "Clínica Geral",
-  "registroProfissional": "CRM-SC 48213"
+  "status": 400,
+  "erro": "Bad Request",
+  "mensagem": "R1: o profissional Dra. Helena Martins já tem uma consulta agendada nesse horário",
+  "caminho": "/consultas",
+  "timestamp": "2026-10-13T19:30:00",
+  "campos": []
 }
+```
 
+As mensagens de cada regra:
 
-Todos os campos são obrigatórios e seguem as mesmas validações do cadastro.
+| Regra | Rota | Mensagem |
+|---|---|---|
+| R1 | `POST /consultas` | `R1: o profissional <nome> já tem uma consulta agendada nesse horário` |
+| R2 | `POST /consultas` | `R2: o paciente já tem uma consulta agendada em <especialidade>. Cancele ou espere ela acontecer para marcar outra` |
+| R3 | `POST /consultas` | `R3: a clínica atende de segunda a sexta, das 08:00 às 18:00, em horários de 30 em 30 minutos (o último começa às 17:30)` |
+| R4 | `PUT /consultas/{id}/cancelar` | `R4: a consulta só pode ser cancelada com pelo menos 2 horas de antecedência` |
 
-HTTP	Situação
-200 OK	Profissional atualizado
-400 Bad Request	Campos inválidos ou registro pertencente a outro profissional
-404 Not Found	Profissional não encontrado
-
-O próprio profissional pode manter o seu registro atual sem gerar erro.
-
-Mensagem para registro pertencente a outro profissional:
-
-Já existe outro profissional cadastrado com o registro CRM-SC 48213
-
-3.7. Remover profissional
-
-DELETE /profissionais/{id}
-
-Remove um profissional, desde que ele não possua consultas registradas, independentemente do status.
-
-HTTP	Situação
-204 No Content	Profissional removido, sem corpo na resposta
-400 Bad Request	Profissional possui consultas registradas
-404 Not Found	Profissional não encontrado
-
-Mensagem quando a remoção é bloqueada:
-
-O profissional Dra. Helena Martins não pode ser removido: ele tem consultas registradas
-
-4. Pacientes
-
-Representam as pessoas que solicitam consultas na clínica.
-
-4.1. Objeto Paciente
-Campo	Tipo	Exemplo
-id	Número inteiro	1
-nome	Texto	Marcos Oliveira
-email	Texto	marcos.oliveira@email.com
-telefone	Texto	48991234567
-4.2. Validação dos campos
-Campo	Obrigatório	Regras
-nome	Sim	Não pode ser vazio; máximo de 255 caracteres
-email	Sim	Deve ser um e-mail válido; máximo de 255 caracteres
-telefone	Sim	Apenas números, com DDD, contendo 10 ou 11 dígitos
-
-Mensagens de validação:
-
-Nome é obrigatório
-Nome tem no máximo 255 caracteres
-E-mail é obrigatório
-E-mail inválido
-E-mail tem no máximo 255 caracteres
-Telefone é obrigatório
-Telefone deve ter 10 ou 11 números (DDD + número)
-
-O telefone não pode conter espaços, parênteses, traços ou outros caracteres.
-
-4.3. Cadastrar paciente
-
-POST /pacientes
-
-Corpo da requisição:
-
-{
-  "nome": "Marcos Oliveira",
-  "email": "marcos.oliveira@email.com",
-  "telefone": "48991234567"
-}
-
-
-Resposta de sucesso: 201 Created
-
-{
-  "id": 1,
-  "nome": "Marcos Oliveira",
-  "email": "marcos.oliveira@email.com",
-  "telefone": "48991234567"
-}
-
-
-Possível erro:
-
-HTTP	Situação
-400 Bad Request	Campo ausente ou inválido
-4.4. Listar pacientes
-
-GET /pacientes
-
-Retorna todos os pacientes cadastrados.
-
-Resposta: 200 OK
-
-Se não houver pacientes cadastrados, retorna 200 OK com [].
-
-4.5. Buscar paciente por ID
-
-GET /pacientes/{id}
-
-Exemplo: GET /pacientes/1
-
-HTTP	Situação
-200 OK	Paciente encontrado
-404 Not Found	Paciente não encontrado
-
-Mensagem de erro:
-
-Paciente não encontrado: 999
-
-4.6. Atualizar paciente
-
-PUT /pacientes/{id}
-
-Substitui o nome
+| Status | Quando acontece neste projeto |
+|---|---|
+| `400` | JSON ilegível, data fora do formato `yyyy-MM-ddTHH:mm:ss` ou campo inválido no DTO de entrada |
+| `400` | Regra R1, R2, R3 ou R4 violada. A `mensagem` explica a regra |
+| `400` | Registro profissional repetido, remoção de profissional que já tem consultas, ou cancelar e concluir uma consulta que não está mais `AGENDADA` |
+| `404` | Id de profissional, paciente ou consulta que não existe. Em `POST /consultas`, vale também para o `pacienteId` e o `profissionalId` do corpo |
